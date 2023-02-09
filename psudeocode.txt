@@ -1,0 +1,28 @@
+On load, get weather data and store in JSON
+    Call CurrentConditions function
+    Call TodayAt7am function
+    Call TodayPrecip function
+    Call TodayAt5pm function
+    Call OvernightPrecip function
+    Call TomorrowAt7AM function
+    Call TomorrowAt5PM function
+
+CurrentConditions:
+    get Temp
+    get Feelslike
+    get Wind speed
+    get Wind direction as variable
+    if before 9 am:
+        Wind direction morning function
+    else if before 7 pm: 
+        Get wind direction evening function
+    else: (assuming I'm at home after 7pm)
+        Wind direction morning function
+
+TodayAt7am
+    if current time is before 7 am:
+        find unix timestamp for 7 am today
+        loop through hourly array to find temp, feelslike, wind speed, wind direction for 7am today
+        set Today at 7am section to visible
+    else:
+        set Today at 7am section to hidden
