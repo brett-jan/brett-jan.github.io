@@ -34,9 +34,9 @@ function sunRiseSunSet ( d ) {
     document.getElementById('sunrise').innerHTML = sunrise
 
     let sunset_ts = new Date(d.current.sunset * 1000)
-    let sunsetHours = sunset_ts.getHours()
+    let sunsetHours = sunset_ts.getHours() - 12
     let sunsetMinutes = sunset_ts.getMinutes()
-    let sunset = sunsetHours + ":" + sunsetMinutes + " am"
+    let sunset = sunsetHours + ":" + sunsetMinutes + "  pm"
     document.getElementById('sunset').innerHTML = sunset
 }
 
