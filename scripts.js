@@ -36,6 +36,29 @@ function currentConditions( d ) {
     }
 }
 
+function todayMorning( d ) {
+    const currentTime = new Date();
+    if (currentTime.getHours() < 7) {
+        const today7AM = new Date();
+        today7AM.setHours(7)
+        today7AM.setMinutes(0)
+        today7AM.setSeconds(0)
+        today7AM.setMilliseconds(0)
+        const today7AM_ts = Math.floor(today7AM.getTime() / 1000);
+
+        for (i=0; i < d.hourly.length; i++){
+            if (d.hourly[i].dt === today7AM_ts){
+                console.log(i);
+                console.log(today7AM_ts);
+                console.log(d.hourly[i].dt);
+            }
+        }
+        document.getElementById('todayMorning').style.display = 'block'
+    } else {
+        document.getElementById('todayMorning').style.display = 'none'
+    }
+}
+
 function tomorrowMorning( d ) {
     const currentTime = new Date();
     const tomorrow7AM = new Date();
