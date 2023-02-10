@@ -32,6 +32,12 @@ function sunRiseSunSet ( d ) {
     let sunriseMinutes = sunrise_ts.getMinutes()
     let sunrise = sunriseHours + ":" + sunriseMinutes + " am"
     document.getElementById('sunrise').innerHTML = sunrise
+
+    let sunset_ts = new Date(d.current.sunset * 1000)
+    let sunsetHours = sunset_ts.getHours()
+    let sunsetMinutes = sunset_ts.getMinutes()
+    let sunset = sunsetHours + ":" + sunsetMinutes + " am"
+    document.getElementById('sunset').innerHTML = sunset
 }
 
 
@@ -86,12 +92,12 @@ function todayEvening( d ) {
 
         for (i=0; i < d.hourly.length; i++){
             if (d.hourly[i].dt === today5pm_ts){
-                // document.getElementById('today5pm_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
-                // document.getElementById('today5pm_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
-                // document.getElementById('today5pm_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
-                // document.getElementById('today5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
-                // document.getElementById('today5pm_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
-                // document.getElementById('today5pm_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
+                document.getElementById('today5pm_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
+                document.getElementById('today5pm_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
+                document.getElementById('today5pm_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
+                document.getElementById('today5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
+                document.getElementById('today5pm_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
+                document.getElementById('today5pm_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
             }
         }
         document.getElementById('todayEvening').style.display = 'block'
