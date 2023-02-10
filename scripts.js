@@ -18,7 +18,7 @@ function weatherBalloon() {
         tomorrowMorning(data);
     })
     .catch(function() {
-        // catch any errors
+        // catch any errors that occur
     });
 }
 
