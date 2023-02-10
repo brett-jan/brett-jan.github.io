@@ -7,66 +7,193 @@
     <script src="scripts.js"></script>
 </head>
 <body>
-
+    <div class="header">Commute Weather</div>
+    
     <div id="currentConditions">
-        <h1>Current Conditions</h1>
-        <div>Temperature: </div>
-        <div id="current_temp"></div>
-        <div>Feels like: </div>
-        <div id="current_feelslike"></div>
-        <div>Wind Speed: </div>
-        <div id="current_windspeed"></div>
-        <div>Wind Direction: </div>
-        <div id="current_winddirection"></div>
+        <div class="subheader">Current Conditions</div> 
+        <div class="col-3wide">
+            <div class="dataheader">
+            Temperature
+            </div>
+            <div class="dataheader">
+            Feels like
+            </div>
+            <div class="dataheader">
+            Wind
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber" id="current_temp"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="current_feelslike"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="current_windspeed"></p>
+            <div id="current_winddirection"></div> 
+            </div>
+        </div>
+        <div class="precip">
+            {{ weather.overnightprecip }}
+        </div>
     </div>
 
-    <div id ="todayMorning" style="display:none">
-        <h1>This Morning at 7 am</h1>
-        <div>Temperature: </div>
-        <div id="today7am_temp"></div>
-        <div>Feels like: </div>
-        <div id="today7am_feelslike"></div>
-        <div>Wind Speed: </div>
-        <div id="today7am_windspeed"></div>
-        <div>Wind Direction: </div>
-        <div id="today7am_winddirection"></div>
+    <div id="todayMorning" style="display:none">
+        <div class="subheader">Today at 7am</div>
+        <div class="col-3wide">
+            <div class="dataheader">
+            Temperature
+            </div>
+            <div class="dataheader">
+            Feels like
+            </div>
+            <div class="dataheader">
+            POP
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber" id="today7am_temp"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="today7am_feelslike"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="today7am_pop"></p>
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="dataheader">
+            Wind
+            </div>
+            <div class="dataheader">
+            Gusts
+            </div>
+            <div class="dataheader">
+            Sunrise
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber" id="today7am_windspeed"></p>
+            <div id="today7am_winddirection"></div>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="today7am_windgust"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="sunrise"></p>
+            </div>
+        </div>
     </div>
 
-    <div id ="todayEvening" style="display:none">
-        <h1>This Morning at 7 am</h1>
-        <div>Temperature: </div>
-        <div id="today5pm_temp"></div>
-        <div>Feels like: </div>
-        <div id="today5pm_feelslike"></div>
-        <div>Wind Speed: </div>
-        <div id="today5pm_windspeed"></div>
-        <div>Wind Direction: </div>
-        <div id="today5pm_winddirection"></div>
+    <div id="todayEvening" style="display:none">
+        <div class="subheader">Today at 5pm</div>
+        <div class="col-3wide">
+            <div class="dataheader">
+            Temperature
+            </div>
+            <div class="dataheader">
+            Feels like
+            </div>
+            <div class="dataheader">
+            POP
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber" id="today5pm_temp"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="today5pm_feelslike"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="today5pm_pop"></p>
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="dataheader">
+            Wind
+            </div>
+            <div class="dataheader">
+            Gusts
+            </div>
+            <div class="dataheader">
+            Sunrise
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber">{{ weather.morningwindspeed }}</p>
+            {{ weather.morningwinddirection }}
+            </div>
+            <div class="databox">
+            <p class="bignumber">{{ weather.morningwindgusts }}</p>
+            </div>
+            <div class="databox">
+            <p class="bignumber">{{ weather.sunriseMT }}</p>
+            </div>
+        </div>
     </div>
 
     <div id="tomorrowMorning">
-        <h1>Tomorrow Morning at 7 am</h1>
-        <div>Temperature: </div>
-        <div id="tomorrow7am_temp"></div>
-        <div>Feels like: </div>
-        <div id="tomorrow7am_feelslike"></div>
-        <div>Wind Speed: </div>
-        <div id="tomorrow7am_windspeed"></div>
-        <div>Wind Direction: </div>
-        <div id="tomorrow7am_winddirection"></div>
+        <div class="subheader">Tomorrow morning at 7am</div>
+        <div class="col-3wide">
+            <div class="dataheader">
+            Temperature
+            </div>
+            <div class="dataheader">
+            Feels like
+            </div>
+            <div class="dataheader">
+            POP
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber" id="tomorrow7am_temp"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="tomorrow7am_feelslike"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="tomorrow7am_pop"></p>
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="dataheader">
+            Wind
+            </div>
+            <div class="dataheader">
+            Gusts
+            </div>
+            <div class="dataheader">
+            Sunrise
+            </div>
+        </div>
+        <div class="col-3wide">
+            <div class="databox">
+            <p class="bignumber" id="tomorrow7am_windspeed"></p>
+            <div id="tomorrow7am_winddirection"></div>
+            </div>
+            <div class="databox">
+            <p class="bignumber" id="tomorrow7am_windgust"></p>
+            </div>
+            <div class="databox">
+            <p class="bignumber"></p>
+            </div>
+        </div>
     </div>
 
-    <div id="tomorrowEvening">
-        <h1>Tomorrow Evening at 5 pm</h1>
-        <div>Temperature: </div>
-        <div id="tomorrow5pm_temp"></div>
-        <div>Feels like: </div>
-        <div id="tomorrow5pm_feelslike"></div>
-        <div>Wind Speed: </div>
-        <div id="tomorrow5pm_windspeed"></div>
-        <div>Wind Direction: </div>
-        <div id="tomorrow5pm_winddirection"></div>
+
+    <div class="precip">
+        {{ weather.daytimeprecip }}
     </div>
 
+    
+    <div class="footer">
+        Developed by Brett Jan | Last refresh: {{ weather.lastrefreshMT }}
+    </div>
 </body>
 </html>

@@ -14,6 +14,7 @@ function weatherBalloon() {
     .then(function(resp) { return resp.json() }) // Convert data to json
     .then(function(data) {
         console.log(data);
+        sunRiseSunSet(data);
         currentConditions(data);
         todayMorning(data);
         todayEvening(data);
@@ -24,6 +25,15 @@ function weatherBalloon() {
         // catch any errors that occur
     });
 }
+
+function sunRiseSunSet ( d ) {
+    let sunrise_ts = new Date(d.current.sunrise * 1000)
+    let sunriseHours = sunrise_ts.getHours()
+    let sunriseMinutes = sunrise_ts.getMinutes()
+    let sunrise = sunriseHours + ":" + sunriseMinutes + " am"
+    document.getElementById('sunrise').innerHTML = sunrise
+}
+
 
 function currentConditions( d ) {
     document.getElementById('current_temp').innerHTML = Math.round(parseFloat(d.current.temp)) + '&deg;';
@@ -37,6 +47,7 @@ function currentConditions( d ) {
     } else {
         document.getElementById('current_winddirection').innerHTML = windDirection(d.current.wind_deg);
     }
+    console.log("ok ")
 }
 
 function todayMorning( d ) {
@@ -48,18 +59,18 @@ function todayMorning( d ) {
         today7am.setSeconds(0)
         today7am.setMilliseconds(0)
         const today7AM_ts = Math.floor(today7am.getTime() / 1000);
-
+        
         for (i=0; i < d.hourly.length; i++){
             if (d.hourly[i].dt === today7AM_ts){
                 document.getElementById('today7am_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
                 document.getElementById('today7am_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
+                document.getElementById('today7am_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
                 document.getElementById('today7am_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
+                document.getElementById('today7am_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
                 document.getElementById('today7am_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
             }
         }
         document.getElementById('todayMorning').style.display = 'block'
-    } else {
-        document.getElementById('todayMorning').style.display = 'none'
     }
 }
 
@@ -67,7 +78,7 @@ function todayEvening( d ) {
     const currentTime = new Date();
     if (currentTime.getHours() < 17) {
         const today5pm = new Date();
-        today5pm.setHours(7)
+        today5pm.setHours(17)
         today5pm.setMinutes(0)
         today5pm.setSeconds(0)
         today5pm.setMilliseconds(0)
@@ -75,15 +86,15 @@ function todayEvening( d ) {
 
         for (i=0; i < d.hourly.length; i++){
             if (d.hourly[i].dt === today5pm_ts){
-                document.getElementById('today5pm_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
-                document.getElementById('today5pm_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
-                document.getElementById('today5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
-                document.getElementById('today5pm_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
+                // document.getElementById('today5pm_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
+                // document.getElementById('today5pm_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
+                // document.getElementById('today5pm_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
+                // document.getElementById('today5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
+                // document.getElementById('today5pm_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
+                // document.getElementById('today5pm_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
             }
         }
         document.getElementById('todayEvening').style.display = 'block'
-    } else {
-        document.getElementById('todayEvening').style.display = 'none'
     }
 }
 
@@ -95,13 +106,14 @@ function tomorrowMorning( d ) {
     tomorrow7am.setSeconds(0);
     tomorrow7am.setMilliseconds(0);
     const tomorrow7am_ts = Math.floor(tomorrow7am.getTime() / 1000);
-    console.log(tomorrow7am_ts)
-
+    
     for (i=0; i < d.hourly.length; i++){
         if (d.hourly[i].dt === tomorrow7am_ts){
             document.getElementById('tomorrow7am_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
             document.getElementById('tomorrow7am_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
+            document.getElementById('tomorrow7am_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
             document.getElementById('tomorrow7am_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
+            document.getElementById('tomorrow7am_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
             document.getElementById('tomorrow7am_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
         }
     }
@@ -115,14 +127,15 @@ function tomorrowEvening( d ) {
     tomorrow5pm.setSeconds(0);
     tomorrow5pm.setMilliseconds(0);
     const tomorrow5pm_ts = Math.floor(tomorrow5pm.getTime() / 1000);
-    console.log(tomorrow5pm_ts)
 
     for (i=0; i < d.hourly.length; i++){
         if (d.hourly[i].dt === tomorrow5pm_ts){
             document.getElementById('tomorrow5pm_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
             document.getElementById('tomorrow5pm_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
+            document.getElementById('tomorrow5pm_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
             document.getElementById('tomorrow5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
-            document.getElementById('tomorrow5pm_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
+            document.getElementById('tomorrow7am_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
+            document.getElementById('tomorrow5pm_winddirection').innerHTML = windDirectionEvening(d.hourly[i].wind_deg);
         }
     }
 }
