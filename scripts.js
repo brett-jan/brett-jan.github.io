@@ -31,13 +31,15 @@ function sunRiseSunSet ( d ) {
     let sunriseHours = sunrise_ts.getHours()
     let sunriseMinutes = sunrise_ts.getMinutes()
     let sunrise = sunriseHours + ":" + sunriseMinutes + " am"
-    document.getElementById('sunrise').innerHTML = sunrise
+    document.getElementById('sunrise1').innerHTML = sunrise
+    document.getElementById('sunrise2').innerHTML = sunrise
 
     let sunset_ts = new Date(d.current.sunset * 1000)
     let sunsetHours = sunset_ts.getHours() - 12
     let sunsetMinutes = sunset_ts.getMinutes()
     let sunset = sunsetHours + ":" + sunsetMinutes + "  pm"
-    document.getElementById('sunset').innerHTML = sunset
+    document.getElementById('sunset1').innerHTML = sunset
+    document.getElementById('sunset2').innerHTML = sunset
 }
 
 
@@ -53,7 +55,6 @@ function currentConditions( d ) {
     } else {
         document.getElementById('current_winddirection').innerHTML = windDirection(d.current.wind_deg);
     }
-    console.log("ok ")
 }
 
 function todayMorning( d ) {
@@ -133,14 +134,14 @@ function tomorrowEvening( d ) {
     tomorrow5pm.setSeconds(0);
     tomorrow5pm.setMilliseconds(0);
     const tomorrow5pm_ts = Math.floor(tomorrow5pm.getTime() / 1000);
-
+    console.log(tomorrow5pm_ts)
     for (i=0; i < d.hourly.length; i++){
         if (d.hourly[i].dt === tomorrow5pm_ts){
             document.getElementById('tomorrow5pm_temp').innerHTML = Math.round(parseFloat(d.hourly[i].temp)) + '&deg;';
             document.getElementById('tomorrow5pm_feelslike').innerHTML = Math.round(parseFloat(d.hourly[i].feels_like)) + '&deg;';
             document.getElementById('tomorrow5pm_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
             document.getElementById('tomorrow5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
-            document.getElementById('tomorrow7am_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
+            document.getElementById('tomorrow5pm_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
             document.getElementById('tomorrow5pm_winddirection').innerHTML = windDirectionEvening(d.hourly[i].wind_deg);
         }
     }
