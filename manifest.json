@@ -1,10 +1,10 @@
 {
-    "name":"PWA Tutorial",
-    "short_name":"PWA",
+    "name":"Commute Weather",
+    "short_name":"Commute Weather",
     "start_url":"index.html",
     "display":"standalone",
-    "background_color":"red",
-    "theme_color":"red",
+    "background_color":"white",
+    "theme_color":"white",
     "scope": ".",
-    "description":"This is a PWA tutorial."
+    "description":"This app shows Calgary weather during commuting times"
 }
