@@ -1,10 +1,10 @@
 {
-    "name":"Commute Weather",
+    "name":"Weather",
     "short_name": "Weather",
     "start_url":"index.html",
     "display":"standalone",
-    "background_color":"#007DBA",
-    "theme_color":"#007DBA",
+    "background_color":"red",
+    "theme_color":"red",
     "scope": ".",
     "description":"This app shows Calgary weather during commuting times"
 }
