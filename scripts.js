@@ -98,7 +98,7 @@ function todayEvening( d ) {
                 document.getElementById('today5pm_pop').innerHTML = Math.round(parseFloat(d.hourly[i].pop)) + '%';
                 document.getElementById('today5pm_windspeed').innerHTML = Math.round(parseFloat(d.hourly[i].wind_speed) * 3.6) + ' km/h';
                 document.getElementById('today5pm_windgust').innerHTML = Math.round(parseFloat(d.hourly[i].wind_gust) * 3.6) + ' km/h';
-                document.getElementById('today5pm_winddirection').innerHTML = windDirectionMorning(d.hourly[i].wind_deg);
+                document.getElementById('today5pm_winddirection').innerHTML = windDirectionEvening(d.hourly[i].wind_deg);
             }
         }
         document.getElementById('todayEvening').style.display = 'block'
