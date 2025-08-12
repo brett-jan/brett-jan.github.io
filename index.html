@@ -1,254 +1,291 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Commute Weather</title>
-    <link rel="stylesheet" type="text/css" href="style.css" />
-    <script src="scripts.js"></script>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <!-- <link rel="manifest" href="/site.webmanifest"> -->
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-    <meta name="msapplication-TileColor" content="#da532c">
-    <meta name="theme-color" content="#ffffff">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enbridge-style Cost Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold: #FFB81C;
+      --graphite: #353535;
+      --slate: #6b6b6b;
+      --bg: #f5f6f7;
+      --card: #ffffff;
+      --border: #e6e7e9;
+    }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 700px at 50% -10%, #eef0f2 0%, var(--bg) 65%);
+      display: grid; place-items: center;
+      color: var(--graphite);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      transition: background 200ms ease;
+    }
+
+    .shell { width: min(1100px, 96vw); transition: width 200ms ease; }
+
+    .brandbar { display: flex; align-items: center; gap: 14px; color: var(--graphite); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 14px; }
+    .brandbar .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--gold); box-shadow: 0 0 0 4px rgba(255,184,28,0.18); }
+    .brandbar .rule { flex: 1; height: 3px; background: var(--gold); border-radius: 2px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); padding: 22px 26px 24px; }
+
+    .layout { display: grid; grid-template-columns: 1.1fr 1.2fr; gap: 24px; }
+
+    .subhead { text-transform: uppercase; color: var(--slate); font-size: 12px; letter-spacing: 1.2px; margin: 0 0 10px; }
+
+    /* Left column */
+    .timeRow { display: flex; align-items: baseline; gap: 12px; }
+    .timeLabel { color: var(--slate); font-size: 14px; }
+    .time { font-variant-numeric: tabular-nums; font-size: clamp(44px, 7.5vw, 72px); font-weight: 700; letter-spacing: 1px; color: var(--graphite); }
+
+    .moneyWrap { margin-top: 12px; }
+    .moneyLabel { color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 2px; }
+    .money { font-variant-numeric: tabular-nums; font-size: clamp(44px, 9vw, 88px); font-weight: 700; color: var(--graphite); position: relative; display: inline-block; padding-bottom: 6px; }
+    .money::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--gold); border-radius: 3px; }
+
+    .meta { color: var(--slate); font-size: 14px; margin-top: 8px; }
+    .controls { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+    button { background: #fff; color: var(--graphite); border: 1px solid var(--border); padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: box-shadow 120ms ease, border-color 120ms ease; }
+    button:hover { border-color: #d6d7da; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    .primary { background: var(--gold); border-color: var(--gold); }
+
+    /* Right column, attendee controls */
+    .attnCard { border: 1px dashed var(--border); border-radius: 10px; padding: 12px; }
+    .attnHeader { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+    .attnHeader .rateMin { color: var(--slate); font-size: 13px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 6px; text-align: left; }
+    thead th { color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+    tbody tr + tr td { border-top: 1px solid var(--border); }
+
+    .countCtrl { display: inline-flex; align-items: center; gap: 6px; }
+    .mini { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; padding: 0; }
+    .numberField { width: 64px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; text-align: center; }
+
+    /* Kiosk mode */
+    body.kiosk { background: #fff; }
+    body.kiosk .brandbar { display: none; }
+    body.kiosk .shell { width: 100vw; }
+    body.kiosk .card { border-radius: 0; border: none; box-shadow: none; padding: 24px 28px; }
+    body.kiosk .layout { grid-template-columns: 1fr 1fr; gap: 36px; }
+    body.kiosk .time { font-size: clamp(64px, 8vw, 120px); }
+    body.kiosk .money { font-size: clamp(64px, 10vw, 140px); }
+  </style>
 </head>
 <body>
-    <div class="header">Commute Weather</div>
-    
-    <div class="section" id="currentConditions">
-        <div class="subheader">Current Conditions</div> 
-        <div class="col-3wide">
-            <div class="dataheader">
-            Temperature
-            </div>
-            <div class="dataheader">
-            Feels like
-            </div>
-            <div class="dataheader">
-            Wind
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="current_temp"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="current_feelslike"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="current_windspeed"></p>
-            <div id="current_winddirection"></div> 
-            </div>
-        </div>
+  <div class="shell">
+    <div class="brandbar" aria-hidden="true">
+      <div class="dot"></div>
+      <div>Project Cost Run-Rate</div>
+      <div class="rule"></div>
     </div>
 
-    <div class="section" id="todayMorning" style="display:none">
-        <div class="subheader">Today at 7am</div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Temperature
+    <div class="card" role="group" aria-label="Enbridge-style cost timer with attendee controls">
+      <div class="layout">
+        <!-- Left: Timer and accumulated cost -->
+        <section>
+          <p class="subhead">Live timer</p>
+          <div class="timeRow">
+            <div class="time" id="time">00:00</div>
+            <div class="timeLabel">mm:ss</div>
+          </div>
+
+          <div class="moneyWrap">
+            <div class="moneyLabel">Accumulated cost</div>
+            <div class="money"><span aria-hidden="true">$</span><span id="money">0.00</span></div>
+          </div>
+
+          <div class="meta" id="rateText">Accruing at $0.00 per minute</div>
+
+          <div class="controls">
+            <button id="pauseBtn" class="primary" aria-pressed="false">Pause</button>
+            <button id="resetBtn">Reset</button>
+            <button id="kioskBtn">Enter kiosk</button>
+          </div>
+        </section>
+
+        <!-- Right: Attendees and rates -->
+        <section>
+          <p class="subhead">Attendees</p>
+          <div class="attnCard">
+            <div class="attnHeader">
+              <div>Set headcount</div>
+              <div class="rateMin">Total rate, <span id="totalPerMin">$0.00</span> per minute</div>
             </div>
-            <div class="dataheader">
-            Feels like
+
+            <table aria-label="Attendee table">
+              <thead>
+                <tr>
+                  <th scope="col">Role</th>
+                  <th scope="col">Count</th>
+                </tr>
+              </thead>
+              <tbody id="rolesBody">
+                <!-- Rows generated by JS -->
+              </tbody>
+            </table>
+
+            <div class="totalsRow" style="margin-top:10px; display:flex; justify-content:space-between;">
+              <div><span id="totalPeople">0</span> attendees</div>
+              <div>$<span id="totalPerHour">0.00</span> per hour</div>
             </div>
-            <div class="dataheader">
-            POP
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="today7am_temp"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="today7am_feelslike"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="today7am_pop"></p>
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Wind
-            </div>
-            <div class="dataheader">
-            Gusts
-            </div>
-            <div class="dataheader">
-            Sunrise
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="today7am_windspeed"></p>
-            <div id="today7am_winddirection"></div>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="today7am_windgust"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="sunrise1"></p>
-            </div>
-        </div>
+          </div>
+        </section>
+      </div>
     </div>
+  </div>
 
-    <div class="section" id="todayEvening" style="display:none">
-        <div class="subheader">Today at 5pm</div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Temperature
-            </div>
-            <div class="dataheader">
-            Feels like
-            </div>
-            <div class="dataheader">
-            POP
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="today5pm_temp"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="today5pm_feelslike"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="today5pm_pop"></p>
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Wind
-            </div>
-            <div class="dataheader">
-            Gusts
-            </div>
-            <div class="dataheader">
-            Sunset
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="today5pm_windspeed"></p>
-            <div id="today5pm_winddirection"></div>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="today5pm_windgust"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="sunset1"></p>
-            </div>
-        </div>
-    </div>
+  <script>
+    // --- Data model, hard-coded rates (hidden) ---
+    // Order, VP to IC
+    const roles = [
+      { key: 'vp',  label: 'VPs',                      rate: 800, count: 0 },
+      { key: 'dir', label: 'Directors',                rate: 320, count: 0 },
+      { key: 'mgr', label: 'Managers',                 rate: 175, count: 0 },
+      { key: 'sup', label: 'Supervisors',              rate: 120, count: 0 },
+      { key: 'ic',  label: 'Individual Contributors',  rate: 100, count: 0 },
+    ];
 
-    <div class="section" id="tomorrowMorning">
-        <div class="subheader">Tomorrow at 7am</div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Temperature
-            </div>
-            <div class="dataheader">
-            Feels like
-            </div>
-            <div class="dataheader">
-            POP
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="tomorrow7am_temp"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="tomorrow7am_feelslike"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="tomorrow7am_pop"></p>
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Wind
-            </div>
-            <div class="dataheader">
-            Gusts
-            </div>
-            <div class="dataheader">
-            Sunrise
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="tomorrow7am_windspeed"></p>
-            <div id="tomorrow7am_winddirection"></div>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="tomorrow7am_windgust"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="sunrise2"></p>
-            </div>
-        </div>
-    </div>
+    // Elements, timer
+    const timeEl = document.getElementById('time');
+    const moneyEl = document.getElementById('money');
+    const rateTextEl = document.getElementById('rateText');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const kioskBtn = document.getElementById('kioskBtn');
 
-    <div class="section" id="tomorrowEvening">
-        <div class="subheader">Tomorrow at 5pm</div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Temperature
-            </div>
-            <div class="dataheader">
-            Feels like
-            </div>
-            <div class="dataheader">
-            POP
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="tomorrow5pm_temp"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="tomorrow5pm_feelslike"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="tomorrow5pm_pop"></p>
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="dataheader">
-            Wind
-            </div>
-            <div class="dataheader">
-            Gusts
-            </div>
-            <div class="dataheader">
-            Sunset
-            </div>
-        </div>
-        <div class="col-3wide">
-            <div class="databox">
-            <p class="bignumber" id="tomorrow5pm_windspeed"></p>
-            <div id="tomorrow5pm_winddirection"></div>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="tomorrow5pm_windgust"></p>
-            </div>
-            <div class="databox">
-            <p class="bignumber" id="sunset2"></p>
-            </div>
-        </div>
-    </div>
+    // Elements, attendees
+    const tbody = document.getElementById('rolesBody');
+    const totalPerHourEl = document.getElementById('totalPerHour');
+    const totalPerMinEl = document.getElementById('totalPerMin');
+    const totalPeopleEl = document.getElementById('totalPeople');
 
+    // --- Helpers ---
+    function fmt(n, frac = 2) { return n.toLocaleString(undefined, { minimumFractionDigits: frac, maximumFractionDigits: frac }); }
+    function clampInt(n) { return Math.max(0, Number.isFinite(n) ? Math.trunc(n) : 0); }
 
-    <!-- <div class="precip">
-        precipitation placeholder
-    </div> -->
+    function totals() {
+      const perHour = roles.reduce((s, r) => s + r.rate * r.count, 0);
+      const perMin = perHour / 60;
+      const people = roles.reduce((s, r) => s + r.count, 0);
+      return { perHour, perMin, people };
+    }
 
-    
-    <!-- <div class="footer">
-        Developed by Brett Jan
-    </div> -->
+    // --- Timer using dollars accumulator ---
+    let paused = false;
+    let lastStamp = performance.now();
+    let dollarsAccrued = 0;
+    let elapsedSeconds = 0;
+
+    function currentRatePerSec() { return totals().perMin / 60; }
+
+    function renderLoop(now) {
+      if (!paused) {
+        const dt = (now - lastStamp) / 1000; // seconds since last frame
+        dollarsAccrued += dt * currentRatePerSec();
+        elapsedSeconds += dt;
+        timeEl.textContent = formatMMSS(elapsedSeconds);
+        moneyEl.textContent = fmt(dollarsAccrued);
+      }
+      lastStamp = now;
+      requestAnimationFrame(renderLoop);
+    }
+
+    function formatMMSS(totalSeconds) {
+      const s = Math.floor(totalSeconds % 60);
+      const m = Math.floor(totalSeconds / 60);
+      const mm = String(m).padStart(2, '0');
+      const ss = String(s).padStart(2, '0');
+      return `${mm}:${ss}`;
+    }
+
+    // --- Build attendee table ---
+    function buildTable() {
+      tbody.innerHTML = '';
+      for (const r of roles) {
+        const tr = document.createElement('tr');
+
+        const roleTd = document.createElement('td');
+        roleTd.textContent = r.label;
+
+        const countTd = document.createElement('td');
+        const wrap = document.createElement('div');
+        wrap.className = 'countCtrl';
+        const minus = document.createElement('button');
+        minus.type = 'button'; minus.className = 'mini'; minus.textContent = '−';
+        const input = document.createElement('input');
+        input.type = 'number'; input.min = '0'; input.step = '1'; input.value = String(r.count); input.className = 'numberField';
+        const plus = document.createElement('button');
+        plus.type = 'button'; plus.className = 'mini'; plus.textContent = '+';
+
+        minus.addEventListener('click', () => { r.count = Math.max(0, r.count - 1); input.value = String(r.count); updateTotalsUI(); });
+        plus.addEventListener('click',  () => { r.count = r.count + 1;           input.value = String(r.count); updateTotalsUI(); });
+        input.addEventListener('input', () => { r.count = clampInt(Number(input.value)); input.value = String(r.count); updateTotalsUI(); });
+
+        wrap.append(minus, input, plus);
+        countTd.appendChild(wrap);
+
+        tr.append(roleTd, countTd);
+        tbody.appendChild(tr);
+
+        r._input = input;
+      }
+      updateTotalsUI();
+    }
+
+    function updateTotalsUI() {
+      const { perHour, perMin, people } = totals();
+      totalPerHourEl.textContent = fmt(perHour);
+      totalPerMinEl.textContent  = '$' + fmt(perMin);
+      totalPeopleEl.textContent  = String(people);
+      rateTextEl.textContent     = `Accruing at $${fmt(perMin)} per minute`;
+    }
+
+    // --- Controls ---
+    pauseBtn.addEventListener('click', () => {
+      paused = !paused;
+      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
+      pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      lastStamp = performance.now();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      dollarsAccrued = 0; elapsedSeconds = 0;
+      moneyEl.textContent = '0.00'; timeEl.textContent = '00:00';
+      lastStamp = performance.now();
+    });
+
+    // Fullscreen kiosk mode
+    function enterFullscreen() {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+    }
+    function exitFullscreen() {
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+    }
+    function setKiosk(on) {
+      document.body.classList.toggle('kiosk', on);
+      kioskBtn.textContent = on ? 'Exit kiosk' : 'Enter kiosk';
+      if (on) enterFullscreen(); else exitFullscreen();
+    }
+    kioskBtn.addEventListener('click', () => {
+      const on = !document.body.classList.contains('kiosk');
+      setKiosk(on);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'k') setKiosk(!document.body.classList.contains('kiosk'));
+    });
+
+    // Init
+    buildTable();
+    requestAnimationFrame(renderLoop);
+  </script>
 </body>
 </html>
