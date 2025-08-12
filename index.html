@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+  />
   <title>Meeting cost</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,6 +21,7 @@
       color: var(--graphite);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       transition: background 200ms ease;
+      -webkit-text-size-adjust: 100%;
     }
 
     .shell { width: min(1100px, 96vw); transition: width 200ms ease; }
@@ -60,6 +64,13 @@
     .mini { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; padding: 0; }
     .numberField { width: 72px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 16px; text-align: center; }
 
+    /* iOS Safari and Chrome mobile fixes */
+    input, select, textarea, button { font-size: 16px; } /* avoid zoom on focus */
+    button, .mini { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    input[type="number"] { -webkit-appearance: textfield; appearance: textfield; }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
     /* Kiosk mode */
     body.kiosk { background: #fff; }
     body.kiosk .brandbar { display: none; }
@@ -74,12 +85,25 @@
       .shell { width: 100vw; }
       .card { border-radius: 0; padding: 18px 16px 22px; }
       .layout { grid-template-columns: 1fr; gap: 18px; }
-      .controls { position: sticky; bottom: 0; background: #fff; padding-top: 10px; margin-top: 14px; }
+      /* make controls fixed so they do not hide under the Chrome bottom bar */
+      .controls {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+        background: #fff; border-top: 1px solid var(--border);
+        z-index: 10;
+      }
+      .card { padding-bottom: 110px; } /* room for fixed controls */
       .mini { width: 34px; height: 34px; }
-      .numberField { width: 64px; font-size: 15px; }
+      .numberField { width: 64px; font-size: 16px; }
       .time { font-size: clamp(48px, 12vw, 72px); }
       .money { font-size: clamp(48px, 14vw, 96px); }
       .brandbar { margin: 8px 12px; }
+    }
+
+    /* extra bottom padding for iOS safe area */
+    @supports (-webkit-touch-callout: none) {
+      .controls { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
     }
   </style>
 </head>
@@ -140,7 +164,7 @@
   </div>
 
   <script>
-    // --- Data model, hard-coded rates (hidden) ---
+    // Hard-coded hourly rates
     const roles = [
       { key: 'vp',  label: 'VPs',                     rate: 800, count: 0 },
       { key: 'dir', label: 'Directors',               rate: 320, count: 0 },
@@ -198,7 +222,7 @@
       return `${mm}:${ss}`;
     }
 
-    // Build table
+    // Build attendee rows
     function buildTable() {
       tbody.innerHTML = '';
       for (const r of roles) {
@@ -253,6 +277,27 @@
       rateTextEl.textContent = `Accruing at $${fmt(perMin)} per minute`;
     }
 
+    // Kiosk helpers with graceful fallback on iOS Chrome
+    function canFullscreen() {
+      return document.fullscreenEnabled && document.documentElement.requestFullscreen;
+    }
+    function enterFullscreen() {
+      if (canFullscreen()) document.documentElement.requestFullscreen().catch(()=>{});
+    }
+    function exitFullscreen() {
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+    }
+    function setKiosk(on) {
+      document.body.classList.toggle('kiosk', on);
+      kioskBtn.textContent = on ? 'Exit kiosk' : 'Enter kiosk';
+      if (on) {
+        enterFullscreen();
+        setTimeout(()=>window.scrollTo(0,0), 50);
+      } else {
+        exitFullscreen();
+      }
+    }
+
     // Controls
     pauseBtn.addEventListener('click', () => {
       paused = !paused;
@@ -269,22 +314,11 @@
       lastStamp = performance.now();
     });
 
-    function enterFullscreen() {
-      const el = document.documentElement;
-      if (el.requestFullscreen) el.requestFullscreen();
-    }
-    function exitFullscreen() {
-      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
-    }
-    function setKiosk(on) {
-      document.body.classList.toggle('kiosk', on);
-      kioskBtn.textContent = on ? 'Exit kiosk' : 'Enter kiosk';
-      if (on) enterFullscreen(); else exitFullscreen();
-    }
     kioskBtn.addEventListener('click', () => {
       const on = !document.body.classList.contains('kiosk');
       setKiosk(on);
     });
+
     document.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'k') setKiosk(!document.body.classList.contains('kiosk'));
     });
