@@ -1,331 +1,473 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
-  />
-  <title>Meeting cost</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root { --gold:#FFB81C; --graphite:#353535; --slate:#6b6b6b; --bg:#f5f6f7; --card:#ffffff; --border:#e6e7e9; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Meeting Cost — Enbridge Style (Baseline v1.2.0)</title>
+<!-- Changelog
+v1.2.0  Baseline locked: adopts v1.1.0 with share-link, fixed-width Count column, counts centered, buttons deduplicated, and layout tweaks.
+v1.1.0  Added share-link via URL hash. Start creates an anchor with start time and mix. Copy link so others see same live total. Viewer auto-joins.
+v1.0.0  Baseline locked: light Enbridge styling, yellow accent, cost > timer, no $/hr inputs, start toggles pause/resume, no auto-start, compact layout, plus/minus visible, counts centered.
+-->
+<style>
+  :root{
+    --gold:#FFC72C;
+    --text:#1b1f23;
+    --muted:#6b7280;
+    --panel:#ffffff;
+    --bg:#f6f7f9;
+    --line:#e5e7eb;
+    --line-2:#d6d9de;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; background:var(--bg); color:var(--text); font:16px/1.35 Arial, Helvetica, sans-serif}
 
-    html, body { height: 100%; }
-    body {
-      margin: 0;
-      background: radial-gradient(1200px 700px at 50% -10%, #eef0f2 0%, var(--bg) 65%);
-      display: grid; place-items: center;
-      color: var(--graphite);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      transition: background 200ms ease;
-      -webkit-text-size-adjust: 100%;
+  .wrap{height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:10px}
+  .card{
+    width:100%; max-width:720px; height:100%;
+    display:grid; grid-template-columns:1fr; grid-template-rows:auto auto auto auto auto; 
+    grid-template-areas:
+      'brand'
+      'metrics'
+      'attn'
+      'controls'
+      'share';
+    gap:12px;
+    background:var(--panel);
+    border:1px solid var(--line); padding:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.06);
+    overflow:hidden;
+  }
+
+  .brand{display:flex; align-items:center; gap:10px}
+  .dot{width:12px; height:12px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 3px rgba(255,199,44,.28)}
+  .brand h1{margin:0; font-size:18px; font-weight:700; letter-spacing:.02em}
+
+  .metrics{display:grid; grid-template-columns:1.1fr .9fr; gap:12px}
+  .tile{background:#fff; border:1px solid var(--line); padding:12px}
+  .label{color:var(--muted); font-size:11px; letter-spacing:.12em; text-transform:uppercase}
+  .money{font-size:clamp(30px,7.6vw,46px); font-weight:800; margin-top:6px; font-variant-numeric:tabular-nums}
+  .time{font-size:clamp(22px,6.2vw,34px); font-weight:700; margin-top:8px; font-variant-numeric:tabular-nums}
+  .underline{height:6px; background:var(--gold); margin-top:8px}
+  .sub{font-size:12px; margin-top:8px; color:#374151}
+
+  .attn{background:#fff; border:1px solid var(--line); padding:10px; display:grid; grid-template-rows:auto 1fr; min-height:0}
+  .thead{display:grid; grid-template-columns:1fr 48%; gap:10px; padding:6px 8px; color:#6b7280; font-size:11px; letter-spacing:.12em; text-transform:uppercase; border-bottom:1px dashed var(--line-2)}
+  .rows{display:grid; gap:8px; overflow:hidden; padding-top:6px}
+  .row{display:grid; grid-template-columns:1fr 48%; gap:10px; align-items:center; background:#fff; border:1px solid var(--line); padding:8px; min-width:0}
+  .role{font-weight:700; font-size:14px; color:#111827}
+
+  .qty{display:grid; grid-template-columns:32px 1fr 32px; gap:6px; min-width:160px; justify-self:end}
+  .qty input{width:100%; min-width:0; height:34px; border:1px solid var(--line-2); background:#fff; color:#111; font-variant-numeric:tabular-nums; text-align:center; padding:0; line-height:34px; appearance:textfield; -moz-appearance:textfield}
+  .qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+  button{height:34px; border:1px solid var(--line-2); background:#f9fafb; color:#111827; font-weight:800; cursor:pointer}
+  .primary{background:var(--gold); color:#111; border-color:#c8a321}
+  .ghost{background:#f3f4f6}
+
+  .share{background:#fff; border:1px dashed var(--line-2); padding:10px; color:#374151; font-size:13px}
+  .share button{height:32px; border:1px solid var(--line-2); background:#f9fafb; color:#111827; font-weight:700; cursor:pointer}
+
+  .controls{display:flex; gap:10px}
+  .controls button{flex:1}
+
+  /* compact on short phones */
+  @media (max-height:740px){.card{gap:10px; padding:12px} .tile{padding:10px} .money{font-size:clamp(28px,7.2vw,42px)} .time{font-size:clamp(20px,5.8vw,32px)} .rows{gap:6px}}
+  @media (max-height:640px){.qty input,button{height:32px; line-height:32px} .row{padding:6px}}
+  /* flatten all rounded corners, keep brand dot circular */
+  *{border-radius:0 !important}
+  .dot{border-radius:50% !important}
+  /* assign areas for optional desktop layout */
+  .brand{grid-area:brand}
+  .metrics{grid-area:metrics}
+  .attn{grid-area:attn}
+  .controls{grid-area:controls}
+  .share{grid-area:share}
+
+  /* desktop layout, side-by-side with larger numbers */
+  @media (min-width:1100px){
+    .wrap{padding:24px; align-items:center}
+    .card{
+      max-width:1200px; height:auto;
+      grid-template-columns:minmax(420px,1fr) minmax(420px,1fr);
+      grid-template-rows:auto 1fr auto;
+      grid-template-areas:
+        "brand brand"
+        "metrics attn"
+        "controls share";
+      gap:16px;
+      align-items:start;
     }
-
-    .shell { width: min(1100px, 96vw); transition: width 200ms ease; }
-
-    .brandbar { display: flex; align-items: center; gap: 14px; color: var(--graphite); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 14px; }
-    .brandbar .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--gold); box-shadow: 0 0 0 4px rgba(255,184,28,0.18); }
-    .brandbar .rule { flex: 1; height: 3px; background: var(--gold); border-radius: 2px; }
-
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); padding: 22px 26px 24px; }
-
-    .layout { display: grid; grid-template-columns: 1.1fr 1.2fr; gap: 24px; }
-
-    .subhead { text-transform: uppercase; color: var(--slate); font-size: 12px; letter-spacing: 1.2px; margin: 0 0 10px; }
-
-    /* Left column */
-    .timeRow { display: flex; align-items: baseline; gap: 12px; }
-    .timeLabel { color: var(--slate); font-size: 14px; }
-    .time { font-variant-numeric: tabular-nums; font-size: clamp(44px, 7.5vw, 72px); font-weight: 700; letter-spacing: 1px; color: var(--graphite); }
-
-    .moneyWrap { margin-top: 12px; }
-    .moneyLabel { color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 2px; }
-    .money { font-variant-numeric: tabular-nums; font-size: clamp(44px, 9vw, 88px); font-weight: 700; color: var(--graphite); position: relative; display: inline-block; padding-bottom: 6px; }
-    .money::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: var(--gold); border-radius: 3px; }
-
-    .meta { color: var(--slate); font-size: 14px; margin-top: 8px; }
-    .controls { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-    button { background: #fff; color: var(--graphite); border: 1px solid var(--border); padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: box-shadow 120ms ease, border-color 120ms ease; }
-    button:hover { border-color: #d6d7da; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
-    .primary { background: var(--gold); border-color: var(--gold); }
-
-    /* Right column, attendee controls */
-    .attnCard { border: 1px dashed var(--border); border-radius: 10px; padding: 12px; }
-
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px 6px; text-align: left; }
-    thead th { color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
-    tbody tr + tr td { border-top: 1px solid var(--border); }
-
-    .countCtrl { display: inline-flex; align-items: center; gap: 6px; }
-    .mini { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; padding: 0; }
-    .numberField { width: 72px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 16px; text-align: center; }
-
-    /* iOS Safari and Chrome mobile fixes */
-    input, select, textarea, button { font-size: 16px; } /* avoid zoom on focus */
-    button, .mini { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-    input[type="number"] { -webkit-appearance: textfield; appearance: textfield; }
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-    /* Kiosk mode */
-    body.kiosk { background: #fff; }
-    body.kiosk .brandbar { display: none; }
-    body.kiosk .shell { width: 100vw; }
-    body.kiosk .card { border-radius: 0; border: none; box-shadow: none; padding: 24px 28px; }
-    body.kiosk .layout { grid-template-columns: 1fr 1fr; gap: 36px; }
-    body.kiosk .time { font-size: clamp(64px, 8vw, 120px); }
-    body.kiosk .money { font-size: clamp(64px, 10vw, 140px); }
-
-    /* Mobile responsive */
-    @media (max-width: 760px) {
-      .shell { width: 100vw; }
-      .card { border-radius: 0; padding: 18px 16px 22px; }
-      .layout { grid-template-columns: 1fr; gap: 18px; }
-      /* make controls fixed so they do not hide under the Chrome bottom bar */
-      .controls {
-        position: fixed;
-        left: 0; right: 0; bottom: 0;
-        padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-        background: #fff; border-top: 1px solid var(--border);
-        z-index: 10;
-      }
-      .card { padding-bottom: 110px; } /* room for fixed controls */
-      .mini { width: 34px; height: 34px; }
-      .numberField { width: 64px; font-size: 16px; }
-      .time { font-size: clamp(48px, 12vw, 72px); }
-      .money { font-size: clamp(48px, 14vw, 96px); }
-      .brandbar { margin: 8px 12px; }
+    .metrics{grid-template-columns:1fr; gap:16px}
+    .tile{padding:24px}
+    .money{font-size:clamp(54px,5.5vw,96px)}
+    .time{font-size:clamp(54px,5.5vw,96px)}
+    .underline{height:8px}
+    .thead{grid-template-columns:1fr 260px}
+    .row{grid-template-columns:1fr 260px}
+    .qty{min-width:260px; justify-self:end}
+    .controls button{height:44px}
+  }
+    .card{
+      max-width:1200px; height:auto;
+      grid-template-columns:minmax(420px,1fr) minmax(420px,1fr);
+      grid-template-rows:auto 1fr auto;
+      grid-template-areas:
+        "brand brand"
+        "metrics attn"
+        "controls share";
+      gap:16px;
+      align-items:start;
     }
-
-    /* extra bottom padding for iOS safe area */
-    @supports (-webkit-touch-callout: none) {
-      .controls { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+    .metrics{grid-template-columns:1fr; gap:16px}
+    .tile{padding:24px}
+    .money{font-size:clamp(54px,5.5vw,96px)}
+    .time{font-size:clamp(54px,5.5vw,96px)}
+    .underline{height:8px}
+    .thead{grid-template-columns:1fr 260px}
+    .row{grid-template-columns:1fr 260px}
+    .qty{min-width:260px; justify-self:end}
+    .controls button{height:44px}
+  }
+    .card{
+      max-width:1200px; height:auto;
+      grid-template-columns:minmax(420px,1fr) minmax(420px,1fr);
+      grid-template-rows:auto 1fr auto;
+      grid-template-areas:
+        "brand brand"
+        "metrics attn"
+        "controls share";
+      gap:16px;
+      align-items:start;
     }
-  </style>
+    .metrics{grid-template-columns:1fr; gap:16px}
+    .tile{padding:24px}
+    .money{font-size:clamp(54px,5.5vw,96px)}
+    .time{font-size:clamp(54px,5.5vw,96px)}
+    .underline{height:8px}
+    .thead{grid-template-columns:1fr 260px}
+    .row{grid-template-columns:1fr 260px}
+    .qty{min-width:260px; justify-self:end}
+    .controls button{height:44px}
+  }
+    .card{
+      max-width:1200px; height:auto;
+      grid-template-columns:minmax(420px,1fr) minmax(420px,1fr);
+      grid-template-rows:auto 1fr auto;
+      grid-template-areas:
+        "brand brand"
+        "metrics attn"
+        "controls share";
+      gap:16px;
+      align-items:start;
+    }
+    .metrics{grid-template-columns:1fr; gap:16px}
+    .tile{padding:24px}
+    .money{font-size:clamp(54px,5.5vw,96px)}
+    .time{font-size:clamp(54px,5.5vw,96px)}
+    .underline{height:8px}
+
+    /* fixed width count column on wide screens */
+    .thead{grid-template-columns:1fr 260px}
+    .row{grid-template-columns:1fr 260px}
+    .qty{min-width:260px; justify-self:end}
+
+    .controls button{height:44px}
+  }
+  /* mobile-safe fallback so content never clips when narrow */
+  
+    .card{
+      max-width:720px; width:100%; height:auto; overflow:visible;
+      grid-template-columns:1fr !important;
+      grid-template-rows:auto auto auto auto auto;
+      grid-template-areas:
+        "brand"
+        "metrics"
+        "attn"
+        "controls"
+        "share" !important;
+      gap:12px;
+    }
+    .metrics{grid-template-columns:1fr !important; gap:12px}
+    /* keep attendee count stable */
+    .thead{grid-template-columns:1fr 48%}
+    .row{grid-template-columns:1fr 48%}
+    .qty{min-width:160px; justify-self:end}
+  }
+    .card{height:auto; min-height:100vh; overflow:visible}
+  }
+    .card{
+      max-width:1200px; height:auto;
+      grid-template-columns:minmax(420px,1fr) minmax(420px,1fr);
+      grid-template-rows:auto 1fr auto;
+      grid-template-areas:
+        "brand brand"
+        "metrics attn"
+        "controls share";
+      gap:16px;
+      align-items:start;
+    }
+    .metrics{grid-template-columns:1fr; gap:16px}
+    .tile{padding:24px}
+    .money{font-size:clamp(54px,5.5vw,96px)}
+    .time{font-size:clamp(54px,5.5vw,96px)}
+    .underline{height:8px}
+
+    /* fixed width count column on wide screens */
+    .thead{grid-template-columns:1fr 260px}
+    .row{grid-template-columns:1fr 260px}
+    .qty{min-width:260px; justify-self:end}
+
+    .controls button{height:44px}
+  }
+  /* explicit mobile layout to avoid clipping on narrow screens */
+  @media (max-width:979px){
+    .wrap{padding:10px; align-items:flex-start}
+    .card{
+      max-width:720px; width:100%; height:auto; overflow:visible;
+      grid-template-columns:1fr;
+      grid-template-rows:auto auto auto auto auto;
+      grid-template-areas:
+        "brand"
+        "metrics"
+        "attn"
+        "controls"
+        "share";
+      gap:12px;
+    }
+    .metrics{grid-template-columns:1fr; gap:12px}
+    .thead{grid-template-columns:1fr 48%}
+    .row{grid-template-columns:1fr 48%}
+    .qty{min-width:160px; justify-self:end}
+  }
+  /* FORCE SINGLE-COLUMN ON NARROW VIEWPORTS */
+  @media (max-width:1099px){
+    .wrap{padding:10px; align-items:flex-start}
+    .card{
+      max-width:720px; width:100%; height:auto; overflow:visible;
+      grid-template-columns:1fr !important;
+      grid-template-rows:auto auto auto auto auto !important;
+      grid-template-areas:
+        "brand"
+        "metrics"
+        "attn"
+        "controls"
+        "share" !important;
+      gap:12px;
+    }
+    .metrics{grid-template-columns:1fr !important}
+    .thead{grid-template-columns:1fr 48%}
+    .row{grid-template-columns:1fr 48%}
+    .qty{min-width:160px; justify-self:end}
+  }
+</style>
 </head>
 <body>
-  <div class="shell">
-    <div class="brandbar" aria-hidden="true">
-      <div class="dot"></div>
-      <div>Meeting cost</div>
-      <div class="rule"></div>
-    </div>
+<div class="wrap">
+  <div class="card" id="app">
+    <div class="brand"><span class="dot"></span><h1>Meeting cost</h1></div>
 
-    <div class="card" role="group" aria-label="Meeting cost with attendee controls">
-      <div class="layout">
-        <!-- Left: Timer and accumulated cost -->
-        <section>
-          <p class="subhead">Live timer</p>
-          <div class="timeRow">
-            <div class="time" id="time">00:00</div>
-            <div class="timeLabel">mm:ss</div>
-          </div>
-
-          <div class="moneyWrap">
-            <div class="moneyLabel">Accumulated cost</div>
-            <div class="money"><span aria-hidden="true">$</span><span id="money">0.00</span></div>
-          </div>
-
-          <div class="meta" id="rateText">Accruing at $0.00 per minute</div>
-
-          <div class="controls">
-            <button id="pauseBtn" class="primary" aria-pressed="false">Pause</button>
-            <button id="resetBtn">Reset</button>
-            <button id="kioskBtn">Enter kiosk</button>
-          </div>
-        </section>
-
-        <!-- Right: Attendees -->
-        <section>
-          <p class="subhead">Attendees</p>
-          <div class="attnCard">
-            <table aria-label="Attendee table">
-              <thead>
-                <tr>
-                  <th scope="col">Role</th>
-                  <th scope="col">Count</th>
-                </tr>
-              </thead>
-              <tbody id="rolesBody"></tbody>
-            </table>
-
-            <div class="totalsRow" style="margin-top:10px; display:flex; justify-content:space-between;">
-              <div><span id="totalPeople">0</span> attendees</div>
-              <div>$<span id="totalPerHour">0.00</span> per hour</div>
-            </div>
-          </div>
-        </section>
+    <div class="metrics">
+      <div class="tile">
+        <div class="label">Accumulated cost</div>
+        <div class="money" id="cost">$0.00</div>
+        <div class="underline"></div>
+        <div class="sub" id="rate">Accruing at $0.00 per minute</div>
+      </div>
+      <div class="tile">
+        <div class="label">Live timer</div>
+        <div class="time" id="time">00:00</div>
+        <div class="sub">mm:ss</div>
       </div>
     </div>
+
+    <div class="attn">
+      <div class="thead"><div>Role</div><div>Count</div></div>
+      <div class="rows" id="rows"></div>
+    </div>
+
+    <div class="controls">
+      <button id="startPause" class="primary">Start</button>
+      <button id="reset" class="ghost">Reset</button>
+    </div>
+
+    <div class="share">
+      <div>Share this meeting, copy a link that preserves the start time and attendee mix so others can see the same live total.</div>
+      <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
+        <button id="copyLink">Copy share link</button>
+        <span id="shareStatus" style="color:#6b7280"></span>
+      </div>
+    </div>
+    </div>
   </div>
+</div>
 
-  <script>
-    // Hard-coded hourly rates
-    const roles = [
-      { key: 'vp',  label: 'VPs',                     rate: 800, count: 0 },
-      { key: 'dir', label: 'Directors',               rate: 320, count: 0 },
-      { key: 'mgr', label: 'Managers',                rate: 175, count: 0 },
-      { key: 'sup', label: 'Supervisors',             rate: 120, count: 0 },
-      { key: 'ic',  label: 'Individual Contributors', rate: 100, count: 0 },
-    ];
+<script>
+// === v1.1.0 share-link ===
+(function(){
+  const ROLE_DEFS = [
+    {key:'vp',  name:'VPs',             rate:800},
+    {key:'dir', name:'Directors',       rate:320},
+    {key:'mgr', name:'Managers',        rate:175},
+    {key:'sup', name:'Supervisors',     rate:120},
+    {key:'ic',  name:'Individual Contributors', rate:100}
+  ];
 
-    // Elements, timer
-    const timeEl = document.getElementById('time');
-    const moneyEl = document.getElementById('money');
-    const rateTextEl = document.getElementById('rateText');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const kioskBtn = document.getElementById('kioskBtn');
+  const state = {
+    running:false,
+    lastTs:0,
+    elapsedMs:0,
+    costAccrued:0,
+    anchor:null, // { startAt:number, mix: {role:{count,rate}} }
+    roles:Object.fromEntries(ROLE_DEFS.map(r=>[r.key,{count:0,rate:r.rate}]))
+  };
 
-    // Elements, attendees
-    const tbody = document.getElementById('rolesBody');
-    const totalPerHourEl = document.getElementById('totalPerHour');
-    const totalPeopleEl = document.getElementById('totalPeople');
+  const el = {
+    time:document.getElementById('time'),
+    cost:document.getElementById('cost'),
+    rate:document.getElementById('rate'),
+    rows:document.getElementById('rows'),
+    startPause:document.getElementById('startPause'),
+    reset:document.getElementById('reset'),
+    copyLink:document.getElementById('copyLink'),
+    shareStatus:document.getElementById('shareStatus')
+  };
 
-    function fmt(n, frac = 2) { return n.toLocaleString(undefined, { minimumFractionDigits: frac, maximumFractionDigits: frac }); }
-    function clampInt(n) { return Math.max(0, Number.isFinite(n) ? Math.trunc(n) : 0); }
+  // Build rows, counts only
+  ROLE_DEFS.forEach(r=>{
+    const row = document.createElement('div');
+    row.className='row';
+    row.innerHTML = `
+      <div class="role">${r.name}</div>
+      <div class="qty">
+        <button type="button" aria-label="decrease">−</button>
+        <input type="number" min="0" step="1" value="0" inputmode="numeric" />
+        <button type="button" aria-label="increase">+</button>
+      </div>`;
+    el.rows.appendChild(row);
 
-    function totals() {
-      const perHour = roles.reduce((s, r) => s + r.rate * r.count, 0);
-      const perMin = perHour / 60;
-      const people  = roles.reduce((s, r) => s + r.count, 0);
-      return { perHour, perMin, people };
+    const [dec, qty, inc] = row.querySelectorAll('.qty button, .qty input');
+
+    function setQty(v){
+      v = Math.max(0,parseInt(v||'0',10));
+      qty.value = v;
+      state.roles[r.key].count = v;
+      draw();
     }
+    dec.addEventListener('click', ()=>setQty(parseInt(qty.value || '0', 10) - 1));
+    inc.addEventListener('click', ()=>setQty(parseInt(qty.value || '0', 10) + 1));
+    qty.addEventListener('input', ()=>setQty(qty.value));
+  });
 
-    // Timer
-    let paused = false; let lastStamp = performance.now();
-    let dollarsAccrued = 0; let elapsedSeconds = 0;
-
-    function currentRatePerSec() { return totals().perMin / 60; }
-
-    function renderLoop(now) {
-      if (!paused) {
-        const dt = (now - lastStamp) / 1000;
-        dollarsAccrued += dt * currentRatePerSec();
-        elapsedSeconds += dt;
-        timeEl.textContent = formatMMSS(elapsedSeconds);
-        moneyEl.textContent = fmt(dollarsAccrued);
-      }
-      lastStamp = now;
-      requestAnimationFrame(renderLoop);
-    }
-
-    function formatMMSS(totalSeconds) {
-      const s = Math.floor(totalSeconds % 60);
-      const m = Math.floor(totalSeconds / 60);
-      const mm = String(m).padStart(2, '0');
-      const ss = String(s).padStart(2, '0');
-      return `${mm}:${ss}`;
-    }
-
-    // Build attendee rows
-    function buildTable() {
-      tbody.innerHTML = '';
-      for (const r of roles) {
-        const tr = document.createElement('tr');
-
-        const roleTd = document.createElement('td');
-        roleTd.textContent = r.label;
-
-        const countTd = document.createElement('td');
-        const wrap = document.createElement('div');
-        wrap.className = 'countCtrl';
-
-        const minus = document.createElement('button');
-        minus.type = 'button'; minus.className = 'mini'; minus.textContent = '−';
-
-        const input = document.createElement('input');
-        input.type = 'number'; input.min = '0'; input.step = '1';
-        input.value = String(r.count); input.className = 'numberField';
-
-        const plus = document.createElement('button');
-        plus.type = 'button'; plus.className = 'mini'; plus.textContent = '+';
-
-        minus.addEventListener('click', () => {
-          r.count = Math.max(0, r.count - 1);
-          input.value = String(r.count);
-          updateTotalsUI();
-        });
-        plus.addEventListener('click', () => {
-          r.count = r.count + 1;
-          input.value = String(r.count);
-          updateTotalsUI();
-        });
-        input.addEventListener('input', () => {
-          r.count = clampInt(Number(input.value));
-          input.value = String(r.count);
-          updateTotalsUI();
-        });
-
-        wrap.append(minus, input, plus);
-        countTd.appendChild(wrap);
-
-        tr.append(roleTd, countTd);
-        tbody.appendChild(tr);
-      }
-      updateTotalsUI();
-    }
-
-    function updateTotalsUI() {
-      const { perHour, perMin, people } = totals();
-      totalPerHourEl.textContent = fmt(perHour);
-      totalPeopleEl.textContent  = String(people);
-      rateTextEl.textContent = `Accruing at $${fmt(perMin)} per minute`;
-    }
-
-    // Kiosk helpers with graceful fallback on iOS Chrome
-    function canFullscreen() {
-      return document.fullscreenEnabled && document.documentElement.requestFullscreen;
-    }
-    function enterFullscreen() {
-      if (canFullscreen()) document.documentElement.requestFullscreen().catch(()=>{});
-    }
-    function exitFullscreen() {
-      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-    }
-    function setKiosk(on) {
-      document.body.classList.toggle('kiosk', on);
-      kioskBtn.textContent = on ? 'Exit kiosk' : 'Enter kiosk';
-      if (on) {
-        enterFullscreen();
-        setTimeout(()=>window.scrollTo(0,0), 50);
-      } else {
-        exitFullscreen();
-      }
-    }
-
-    // Controls
-    pauseBtn.addEventListener('click', () => {
-      paused = !paused;
-      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-      pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
-      lastStamp = performance.now();
+  // Helpers for shareable payload
+  function snapshotMix(){
+    const out={};
+    ROLE_DEFS.forEach(r=>{ const v = state.roles[r.key]; out[r.key] = {count:v.count, rate:v.rate}; });
+    return out;
+  }
+  function encodePayload(obj){
+    try{ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))); }catch(e){ return null; }
+  }
+  function decodePayload(str){
+    try{ return JSON.parse(decodeURIComponent(escape(atob(str)))); }catch(e){ return null; }
+  }
+  function updateHash(){
+    if(!state.anchor) return;
+    const url = new URL(location.href);
+    url.hash = 'm=' + encodePayload({ startAt: state.anchor.startAt, mix: state.anchor.mix });
+    history.replaceState(null,'',url.toString());
+  }
+  function loadFromHash(){
+    const raw = location.hash.replace(/^#/, '');
+    const params = new URLSearchParams(raw);
+    const m = params.get('m');
+    if(!m) return false;
+    const payload = decodePayload(m);
+    if(!payload || !payload.startAt || !payload.mix) return false;
+    state.anchor = { startAt: Number(payload.startAt), mix: payload.mix };
+    // seed UI counts from shared mix
+    for(const k in payload.mix){ if(state.roles[k]) state.roles[k].count = Number(payload.mix[k].count||0); }
+    // reflect counts in inputs
+    const keys = ROLE_DEFS.map(r=>r.key);
+    [...el.rows.querySelectorAll('.row')].forEach((row,i)=>{
+      const key = keys[i]; const inp = row.querySelector('input');
+      if(state.roles[key]) inp.value = state.roles[key].count;
     });
+    // auto-run locally for smooth ticking
+    state.running = true; state.lastTs = 0; requestAnimationFrame(loop);
+    return true;
+  }
 
-    resetBtn.addEventListener('click', () => {
-      dollarsAccrued = 0;
-      elapsedSeconds = 0;
-      moneyEl.textContent = '0.00';
-      timeEl.textContent = '00:00';
-      lastStamp = performance.now();
-    });
+  // Controls
+  el.startPause.addEventListener('click', ()=>{
+    state.running = !state.running;
+    el.startPause.textContent = state.running ? 'Pause' : 'Resume';
+    if(state.running){
+      // first start creates anchor if one doesn't exist
+      if(!state.anchor){ state.anchor = { startAt: Date.now(), mix: snapshotMix() }; updateHash(); }
+      state.lastTs = 0; requestAnimationFrame(loop);
+    }
+  });
 
-    kioskBtn.addEventListener('click', () => {
-      const on = !document.body.classList.contains('kiosk');
-      setKiosk(on);
-    });
+  el.reset.addEventListener('click', ()=>{
+    state.running = false;
+    el.startPause.textContent = 'Start';
+    state.lastTs = 0; state.elapsedMs = 0; state.costAccrued = 0;
+    // reset counts
+    for(const k in state.roles){ state.roles[k].count = 0; }
+    el.rows.querySelectorAll('.qty input').forEach(inp => { inp.value = 0; });
+    // clear share anchor and URL hash
+    state.anchor = null; history.replaceState(null,'',location.pathname + location.search);
+    draw();
+  });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'k') setKiosk(!document.body.classList.contains('kiosk'));
-    });
+  el.copyLink.addEventListener('click', async ()=>{
+    // If not started, stage anchor using current mix and now
+    if(!state.anchor){ state.anchor = { startAt: Date.now(), mix: snapshotMix() }; updateHash(); }
+    const url = location.href;
+    try{ await navigator.clipboard.writeText(url); el.shareStatus.textContent = 'Link copied'; }
+    catch{ el.shareStatus.textContent = 'Copy failed'; }
+    setTimeout(()=>{ el.shareStatus.textContent=''; }, 2000);
+  });
 
-    // Init
-    buildTable();
-    requestAnimationFrame(renderLoop);
-  </script>
+  // Rate computation, choose anchor mix when present for consistency
+  function perMinute(){
+    const src = state.anchor?.mix || state.roles;
+    let sum = 0; for(const k in src){ const v = src[k]; sum += (Number(v.count)||0) * (Number(v.rate)||0) / 60; }
+    return sum;
+  }
+
+  function loop(ts){
+    if(!state.running) return;
+    if(!state.lastTs) state.lastTs = ts;
+    const dt = ts - state.lastTs; state.lastTs = ts;
+    if(!state.anchor){ // local mode
+      state.elapsedMs += dt;
+      state.costAccrued += (perMinute()/60000) * dt;
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function draw(){
+    const elapsed = state.anchor ? (Date.now() - state.anchor.startAt) : state.elapsedMs;
+    const total = Math.max(0, Math.floor(elapsed/1000));
+    const mm = String(Math.floor(total/60)).padStart(2,'0');
+    const ss = String(total%60).padStart(2,'0');
+    el.time.textContent = `${mm}:${ss}`;
+
+    if(state.anchor){
+      const dollarsPerMinute = perMinute();
+      el.cost.textContent = `$${((elapsed/60000)*dollarsPerMinute).toFixed(2)}`;
+      el.rate.textContent = `Accruing at $${dollarsPerMinute.toFixed(2)} per minute`;
+    } else {
+      el.cost.textContent = `$${state.costAccrued.toFixed(2)}`;
+      el.rate.textContent = `Accruing at $${perMinute().toFixed(2)} per minute`;
+    }
+  }
+
+  if(!loadFromHash()) draw();
+})();
+</script>
 </body>
 </html>
